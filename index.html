@@ -2,130 +2,212 @@
 
 <html lang="es">
 
-  <head>
+<head>
 
-    <meta charset="utf-8" />
+<meta charset="utf-8"/>
 
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 
-    <title>Autopitch — Global</title>
+<title>Autopitch — Global One-Page</title>
 
-    <style>
+<style>
 
-      body {
+:root{color-scheme:dark light}
 
-        font-family: system-ui, -apple-system, Inter, Roboto, sans-serif;
+body{font-family:system-ui,-apple-system,Inter,Roboto,sans-serif;margin:0;background:#0f1116;color:#eef;padding:16px}
 
-        background: #0f1116;
+header{background:#1b2028;border-bottom:1px solid #2a3140;padding:14px 16px;position:sticky;top:0;z-index:10}
 
-        color: #eef;
+main{max-width:1120px;margin:0 auto;padding:16px}
 
-        margin: 0;
+h1,h2,h3{margin:.2rem 0}
 
-        padding: 20px;
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
-      }
+select,input,button{border-radius:10px;border:1px solid #2a3140;background:#141820;color:#eef;padding:10px 12px}
 
-      header {
+button{border:0;background:#2d5aa3;font-weight:800;cursor:pointer}
 
-        background: #1b2028;
+button.alt{background:#3a3f4a}
 
-        border-bottom: 1px solid #2a3140;
+button.link{background:#374b7b}
 
-        padding: 12px 16px;
+section{background:#141820;border:1px solid #2a3140;border-radius:12px;padding:16px;margin:12px 0}
 
-        position: sticky;
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 
-        top: 0;
+.card{background:#12161d;border:1px solid #2a3140;border-radius:12px;padding:14px}
 
-      }
+.price{font-size:20px;font-weight:800;margin:6px 0}
 
-      main {
+.pill{display:inline-block;border:1px solid #2a3140;border-radius:999px;padding:4px 8px;font-size:.86rem}
 
-        max-width: 800px;
+.muted{opacity:.75}
 
-        margin: 0 auto;
+pre{background:#0f131a;border:1px solid #2a3140;border-radius:10px;padding:12px;white-space:pre-wrap}
 
-      }
+.kpi{border:1px solid #2a3140;border-radius:10px;padding:12px;min-width:160px}
 
-      h1 {
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 
-        margin: 0 0 8px;
+</style>
 
-      }
+</head>
 
-      section {
+<body>
 
-        background: #141820;
+<header class="row" style="justify-content:space-between">
 
-        border: 1px solid #2a3140;
+  <div class="row">
 
-        border-radius: 12px;
+    <h1>Autopitch — Global</h1>
 
-        padding: 16px;
+    <span class="pill">⏱️ <span id="cd">60:00</span></span>
 
-        margin-top: 12px;
+  </div>
 
-      }
+</header>
 
-      button {
+<main>
 
-        border: 0;
+<section class="row" style="justify-content:space-between;gap:12px">
 
-        border-radius: 10px;
+  <div class="kpi"><div class="muted">Ingresos hoy</div><div class="price" id="k_cash">0.00</div></div>
 
-        background: #2d5aa3;
+  <div class="kpi"><div class="muted">Clics a pago</div><div class="price" id="k_clicks">0</div></div>
 
-        color: #fff;
+  <div class="kpi"><div class="muted">CR estimado</div><div class="price" id="k_cr">0%</div></div>
 
-        padding: 10px 16px;
+  <div class="kpi"><div class="muted">Leads calientes</div><div class="price" id="k_hot">0</div></div>
 
-        cursor: pointer;
+</section>
 
-        font-weight: 600;
+<section>
 
-      }
+<h2>Métodos de pago</h2>
 
-    </style>
+<div class="grid">
 
-  </head>
+  <div class="card">
 
-  <body>
+    <h3>PayPal.me</h3>
 
-    <header>
+    <div class="muted">Pago inmediato (2 clics)</div>
 
-      <h1>Autopitch — Global</h1>
+    <input id="paypalMe" value="https://paypal.me/nostrodamus777"/>
 
-      <p>Panel operativo en construcción ⚙️</p>
+  </div>
 
-    </header>
+  <div class="card">
 
-    <main>
+    <h3>Paddle (placeholder)</h3>
 
-      <section>
+    <div class="muted">Se reemplaza cuando tengas link real</div>
 
-        <h2>Estado del sistema</h2>
+    <input id="paddle_pack" placeholder="Pack → https://checkout.paddle.com/..."/>
 
-        <p>El panel básico está activo y operativo ✅</p>
+  </div>
 
-        <p>
+</div>
 
-          Próximo paso: añadir catálogo, métricas, pasarelas de pago e IA
+</section>
 
-          (automático en el siguiente paso).
+<section>
 
-        </p>
+<h2>Catálogo</h2>
 
-        <button onclick="alert('Conectado correctamente ✅')">
+<div class="grid" id="catalog"></div>
 
-          Probar conexión
+</section>
 
-        </button>
+<script>
 
-      </section>
+const state={paypal:'https://paypal.me/nostrodamus777',kpi:{cash:0,clicks:0,hot:0}}
 
-    </main>
+const BASE=[{sku:'pack-59',name:'Template Pack',eur:59},{sku:'dfy-299',name:'DFY 5 plantillas',eur:299}]
 
-  </body>
+function sym(c){return c==='USD'?'$':'€'}
+
+function fx(eur){return eur} // solo EUR
+
+function renderStore(){
+
+  const wrap=document.getElementById('catalog')
+
+  wrap.innerHTML=''
+
+  BASE.forEach(p=>{
+
+    const card=document.createElement('div')
+
+    card.className='card'
+
+    card.innerHTML=`
+
+      <div class="row" style="justify-content:space-between"><h3>${p.name}</h3><span class="pill">PayPal</span></div>
+
+      <div class="price">${sym('EUR')}${fx(p.eur).toFixed(2)}</div>
+
+      <div class="btns">
+
+        <a class="btn" target="_blank" href="${state.paypal}">Pagar con PayPal</a>
+
+      </div>
+
+    `
+
+    wrap.appendChild(card)
+
+  })
+
+}
+
+function renderKPIs(){
+
+  state.kpi.cash+=Math.floor(Math.random()*10)
+
+  state.kpi.clicks+=Math.floor(Math.random()*2)
+
+  state.kpi.hot+=Math.floor(Math.random()*1)
+
+  document.getElementById('k_cash').textContent=state.kpi.cash+' €'
+
+  document.getElementById('k_clicks').textContent=state.kpi.clicks
+
+  const cr=(state.kpi.clicks? (state.kpi.hot/state.kpi.clicks)*100:0).toFixed(1)
+
+  document.getElementById('k_cr').textContent=cr+'%'
+
+  document.getElementById('k_hot').textContent=state.kpi.hot
+
+}
+
+(function init(){
+
+  renderStore()
+
+  setInterval(renderKPIs,2000)
+
+  const end=Date.now()+60*60*1000
+
+  (function tick(){
+
+    const s=Math.max(0,Math.floor((end-Date.now())/1000))
+
+    const m=String(Math.floor(s/60)).padStart(2,'0')
+
+    const ss=String(s%60).padStart(2,'0')
+
+    document.getElementById('cd').textContent=`${m}:${ss}`
+
+    if(s>0) requestAnimationFrame(tick)
+
+  })()
+
+})()
+
+</script>
+
+</body>
 
 </html>
