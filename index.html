@@ -1,0 +1,549 @@
+<!doctype html>
+
+<html lang="es" data-lang="es">
+
+<head>
+
+<meta charset="utf-8"/>
+
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+<title>Autopitch — Vender ya (Compartir & Bonus)</title>
+
+<style>
+
+:root{color-scheme:dark light}
+
+body{font-family:system-ui,-apple-system,Inter,Roboto,sans-serif;margin:0;background:#0f1116;color:#eef}
+
+header{background:#1b2028;border-bottom:1px solid #2a3140;padding:12px 16px;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center}
+
+.container{max-width:1100px;margin:16px auto;padding:12px}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.btn{border-radius:8px;padding:8px 12px;border:0;background:#2d5aa3;color:white;font-weight:700;cursor:pointer}
+
+.btn.alt{background:#3a3f4a}
+
+.card{background:#141820;border:1px solid #23262d;border-radius:10px;padding:14px;margin-bottom:12px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+
+.small{font-size:.9rem;color:#cfd6e0}
+
+.pill{background:#0f1418;border:1px solid #23262d;padding:6px 10px;border-radius:999px}
+
+.hidden{display:none}
+
+.toast{position:fixed;right:12px;bottom:12px;background:#2d5aa3;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:999}
+
+.shareBtns{display:flex;gap:8px;flex-wrap:wrap}
+
+.linkLike{background:transparent;border:1px solid #2a3140;padding:8px 10px;border-radius:8px;color:#9fd;cursor:pointer}
+
+.kpi{display:flex;gap:8px;align-items:center}
+
+.kpi .num{font-weight:800;font-size:1.1rem}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+  <div class="row">
+
+    <div><strong>Autopitch</strong> <span class="small">— Vende ya</span></div>
+
+    <div class="small pill" id="countUsers">Usuarios: 0</div>
+
+  </div>
+
+  <div class="row">
+
+    <button id="btnToggleLogin" class="btn alt">🔑 Login / Registro</button>
+
+    <button id="btnAdmin" class="btn alt">⚙️ Admin</button>
+
+  </div>
+
+</header>
+
+<div class="container">
+
+  <!-- Login / Register -->
+
+  <div id="authCard" class="card hidden">
+
+    <div class="row" style="gap:12px">
+
+      <div style="flex:1">
+
+        <h3>Registro</h3>
+
+        <input id="reg_user" placeholder="Usuario (email o nickname)" style="width:100%;margin-bottom:8px"/>
+
+        <input id="reg_pass" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:8px"/>
+
+        <div class="row"><button class="btn" id="btnDoRegister">Crear cuenta</button></div>
+
+      </div>
+
+      <div style="flex:1">
+
+        <h3>Login</h3>
+
+        <input id="log_user" placeholder="Usuario" style="width:100%;margin-bottom:8px"/>
+
+        <input id="log_pass" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:8px"/>
+
+        <div class="row"><button class="btn" id="btnDoLogin">Entrar</button></div>
+
+      </div>
+
+    </div>
+
+    <p class="small" id="authMsg">—</p>
+
+  </div>
+
+  <!-- Admin Panel -->
+
+  <div id="adminCard" class="card hidden">
+
+    <h3>Admin — Control rápido</h3>
+
+    <div class="row" style="gap:12px;align-items:center">
+
+      <div>
+
+        IBAN: <input id="adminIban" style="min-width:260px" value="ES3615860001410334845511"/>
+
+        <button class="btn alt" id="saveIban">Guardar</button>
+
+      </div>
+
+      <div class="small">PayPal: <input id="adminPaypal" style="min-width:220px" value="https://paypal.me/nostrodamus777"/></div>
+
+      <div><button class="btn alt" id="closeAdmin">Cerrar</button></div>
+
+    </div>
+
+    <h4 style="margin-top:12px">Usuarios</h4>
+
+    <div id="adminUsers" style="margin-top:8px"></div>
+
+  </div>
+
+  <!-- KPIs & social proof -->
+
+  <div class="card">
+
+    <div class="row" style="justify-content:space-between;align-items:center">
+
+      <div class="row">
+
+        <div class="kpi"><div class="small">Ingresos hoy</div><div class="num" id="k_cash">0 €</div></div>
+
+        <div class="kpi"><div class="small">Clics</div><div class="num" id="k_clicks">0</div></div>
+
+        <div class="kpi"><div class="small">Leads</div><div class="num" id="k_hot">0</div></div>
+
+      </div>
+
+      <div>
+
+        <button class="btn" id="btnShareTop">Compartir y ganar bonus</button>
+
+      </div>
+
+    </div>
+
+    <p class="small" style="margin-top:8px" id="socialProof">Última compra: —</p>
+
+  </div>
+
+  <!-- Catalog -->
+
+  <div class="card">
+
+    <h3>Catálogo — compra directa</h3>
+
+    <div class="grid" id="catalog"></div>
+
+  </div>
+
+  <!-- Referidos y compartir -->
+
+  <div class="card">
+
+    <h3>Invita y gana</h3>
+
+    <p class="small">Comparte tu enlace único; al registrarse/comprar recibirás créditos o descuentos automáticos.</p>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+
+      <input id="myRef" class="small" style="min-width:260px" readonly/>
+
+      <button class="linkLike" id="copyRef">Copiar</button>
+
+    </div>
+
+    <div style="margin-top:12px">
+
+      <div class="shareBtns">
+
+        <button class="btn" data-share="whatsapp" id="share_w">WhatsApp</button>
+
+        <button class="btn" data-share="x" id="share_x">X / Twitter</button>
+
+        <button class="btn" data-share="linkedin" id="share_li">LinkedIn</button>
+
+        <button class="btn" data-share="telegram" id="share_tg">Telegram</button>
+
+        <button class="btn" data-share="email" id="share_em">Email</button>
+
+        <button class="btn" id="copyMsg">Copiar mensaje</button>
+
+      </div>
+
+    </div>
+
+    <p class="small" style="margin-top:10px">Créditos: <span id="userCredits">0</span></p>
+
+  </div>
+
+</div>
+
+<div id="toast" class="toast hidden">—</div>
+
+<script>
+
+/* ---------- CONFIG ---------- */
+
+const PAYPAL_BASE = "https://paypal.me/nostrodamus777";
+
+const DEFAULT_IBAN = "ES3615860001410334845511";
+
+const ADMIN_USER = "admin";
+
+const ADMIN_PASS = "admin123!"; // cambia si quieres
+
+/* ---------- STORAGE & STATE ---------- */
+
+function dbGet(){ return JSON.parse(localStorage.getItem('ap_db')||'{"users":{},"metrics":{"cash":0,"clicks":0,"orders":0}}') }
+
+function dbSet(o){ localStorage.setItem('ap_db', JSON.stringify(o)) }
+
+let DB = dbGet();
+
+let currentUser = localStorage.getItem('ap_user') || null;
+
+/* ---------- UTIL ---------- */
+
+function toast(msg, t=2500){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.remove('hidden'); setTimeout(()=>el.classList.add('hidden'), t) }
+
+function saveDB(){ dbSet(DB) }
+
+function ensureUser(u){ if(!DB.users[u]) DB.users[u] = {pass:'',credits:0,ref:0,joined:(new Date()).toISOString()} }
+
+/* ---------- PRODUCTS ---------- */
+
+const PRODUCTS = [
+
+  {sku:'pack-59', title:'Template Pack', price:59},
+
+  {sku:'dfy-299', title:'DFY 5 plantillas', price:299}
+
+];
+
+function renderCatalog(){
+
+  const wrap=document.getElementById('catalog'); wrap.innerHTML='';
+
+  PRODUCTS.forEach(p=>{
+
+    const d=document.createElement('div'); d.className='card';
+
+    d.innerHTML = `<h4 style="margin:0">${p.title}</h4><div class="small">SKU: ${p.sku}</div><div style="margin-top:8px" class="small">Precio: ${p.price} €</div>
+
+      <div style="margin-top:8px" class="row">
+
+        <a class="btn" target="_blank" href="${PAYPAL_BASE}/${p.price}">Pagar (PayPal)</a>
+
+        <button class="btn alt" onclick="copyIBAN('${p.sku}',${p.price})">Transferencia</button>
+
+      </div>`;
+
+    wrap.appendChild(d);
+
+  });
+
+}
+
+/* ---------- COPY IBAN ---------- */
+
+function copyIBAN(sku, price){
+
+  const iban = DB.iban || DEFAULT_IBAN;
+
+  const txt = `Transferencia\nConcepto: ${sku}\nImporte: ${price} €\nIBAN: ${iban}\nTitular: —`;
+
+  navigator.clipboard.writeText(txt).then(()=>toast('Datos de transferencia copiados'));
+
+}
+
+/* ---------- AUTH ---------- */
+
+document.getElementById('btnToggleLogin').onclick = ()=> {
+
+  const a = document.getElementById('authCard');
+
+  a.classList.toggle('hidden');
+
+};
+
+document.getElementById('btnAdmin').onclick = ()=> {
+
+  const a=document.getElementById('adminCard'); a.classList.toggle('hidden'); adminRender();
+
+};
+
+document.getElementById('btnDoRegister').onclick = ()=>{
+
+  const u=document.getElementById('reg_user').value.trim();
+
+  const p=document.getElementById('reg_pass').value;
+
+  if(!u||!p){ toast('Completa usuario y contraseña'); return; }
+
+  if(DB.users[u]){ toast('Usuario ya existe'); return; }
+
+  DB.users[u] = {pass:p,credits:0,ref:0,joined:(new Date()).toISOString()};
+
+  saveDB();
+
+  localStorage.setItem('ap_user', u); currentUser=u;
+
+  toast('Registrado y logueado: '+u);
+
+  renderUI();
+
+  updateRefLink();
+
+};
+
+document.getElementById('btnDoLogin').onclick = ()=>{
+
+  const u=document.getElementById('log_user').value.trim();
+
+  const p=document.getElementById('log_pass').value;
+
+  if(!u||!p){ toast('Completa usuario y contraseña'); return; }
+
+  if(DB.users[u] && DB.users[u].pass === p){ localStorage.setItem('ap_user', u); currentUser=u; toast('Bienvenido '+u); renderUI(); updateRefLink(); }
+
+  else if(u===ADMIN_USER && p===ADMIN_PASS){ localStorage.setItem('ap_user', ADMIN_USER); currentUser=ADMIN_USER; toast('Admin logueado'); renderUI(); adminRender(); }
+
+  else toast('Credenciales incorrectas');
+
+};
+
+/* ---------- ADMIN ---------- */
+
+document.getElementById('closeAdmin').onclick = ()=> document.getElementById('adminCard').classList.add('hidden');
+
+document.getElementById('saveIban').onclick = ()=>{
+
+  DB.iban = document.getElementById('adminIban').value.trim() || DEFAULT_IBAN;
+
+  DB.paypal = document.getElementById('adminPaypal').value.trim() || PAYPAL_BASE;
+
+  saveDB(); toast('Ajustes guardados');
+
+};
+
+function adminRender(){
+
+  // populate admin fields and users
+
+  document.getElementById('adminIban').value = DB.iban || DEFAULT_IBAN;
+
+  document.getElementById('adminPaypal').value = DB.paypal || PAYPAL_BASE;
+
+  const wrap = document.getElementById('adminUsers'); wrap.innerHTML='';
+
+  Object.keys(DB.users).forEach(u=>{
+
+    const usr = DB.users[u];
+
+    const d = document.createElement('div'); d.className='card';
+
+    d.innerHTML = `<strong>${u}</strong><div class="small">Créditos: ${usr.credits || 0} — Referidos: ${usr.ref || 0}</div>
+
+      <div style="margin-top:8px"><button class="btn" onclick="adminGrant('${u}')">+Créditos</button> <button class="btn alt" onclick="adminMark('${u}')">Marcar pago</button></div>`;
+
+    wrap.appendChild(d);
+
+  });
+
+}
+
+function adminGrant(u){ if(DB.users[u]){ DB.users[u].credits = (DB.users[u].credits||0)+20; saveDB(); adminRender(); toast('Créditos añadidos') } }
+
+function adminMark(u){ if(DB.users[u]){ DB.users[u].subscribed = true; saveDB(); adminRender(); toast('Marcado como suscrito') } }
+
+/* ---------- REF LINK & SHARE ---------- */
+
+function updateRefLink(){
+
+  if(!currentUser){ document.getElementById('myRef').value = 'Inicia sesión para generar link'; return; }
+
+  const link = location.origin + location.pathname + '?ref=' + encodeURIComponent(currentUser);
+
+  document.getElementById('myRef').value = link;
+
+  document.getElementById('copyRef').onclick = ()=>{ navigator.clipboard.writeText(link).then(()=>toast('Link copiado')) };
+
+  document.getElementById('userCredits').textContent = (DB.users[currentUser] && DB.users[currentUser].credits) || 0;
+
+}
+
+// award bonus when share is clicked (one reward per platform per day)
+
+function awardShareBonus(platform){
+
+  if(!currentUser){ toast('Debes iniciar sesión para ganar bonus'); return; }
+
+  const key = `ap_share_${currentUser}_${platform}`;
+
+  const last = localStorage.getItem(key);
+
+  const today = (new Date()).toDateString();
+
+  if(last === today){ toast('Bonus ya reclamado hoy en '+platform); return; }
+
+  // give credits
+
+  DB.users[currentUser].credits = (DB.users[currentUser].credits||0) + 5;
+
+  saveDB();
+
+  localStorage.setItem(key, today);
+
+  document.getElementById('userCredits').textContent = DB.users[currentUser].credits;
+
+  toast('+5 créditos por compartir en '+platform);
+
+}
+
+/* share handlers */
+
+function shareOpen(platform){
+
+  const txt = encodeURIComponent(`Mira este pack rápido: ${location.href}`);
+
+  let url = '';
+
+  if(platform==='whatsapp'){ url = `https://wa.me/?text=${txt}`; }
+
+  else if(platform==='x'){ url = `https://twitter.com/intent/tweet?text=${txt}`; }
+
+  else if(platform==='linkedin'){ url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`; }
+
+  else if(platform==='telegram'){ url = `https://t.me/share/url?url=${encodeURIComponent(location.href)}&text=${txt}`; }
+
+  else if(platform==='email'){ url = `mailto:?subject=${encodeURIComponent('Mira esto')}&body=${decodeURIComponent(txt)}`; }
+
+  if(url){ window.open(url, '_blank'); awardShareBonus(platform); }
+
+}
+
+document.getElementById('share_w').onclick = ()=>shareOpen('whatsapp');
+
+document.getElementById('share_x').onclick = ()=>shareOpen('x');
+
+document.getElementById('share_li').onclick = ()=>shareOpen('linkedin');
+
+document.getElementById('share_tg').onclick = ()=>shareOpen('telegram');
+
+document.getElementById('share_em').onclick = ()=>shareOpen('email');
+
+document.getElementById('copyMsg').onclick = ()=>{
+
+  const msg = `Pack recomendado: ${location.href} — Compra rápido con PayPal: ${PAYPAL_BASE}`;
+
+  navigator.clipboard.writeText(msg).then(()=>{ awardShareBonus('copy'); toast('Mensaje copiado — +5 créditos'); });
+
+};
+
+/* ---------- SOCIAL PROOF & METRICS (SIMULATED) ---------- */
+
+function simulateActivity(){
+
+  DB.metrics = DB.metrics || {cash:0,clicks:0,orders:0};
+
+  const clicks = Math.floor(Math.random()*4);
+
+  const sales = Math.random()<0.12 ? 1 : 0;
+
+  DB.metrics.clicks += clicks;
+
+  DB.metrics.cash += sales ? (Math.floor(Math.random()*2)?59:299) : 0;
+
+  DB.metrics.orders += sales;
+
+  saveDB();
+
+  document.getElementById('k_clicks').textContent = DB.metrics.clicks;
+
+  document.getElementById('k_cash').textContent = DB.metrics.cash + ' €';
+
+  document.getElementById('k_hot').textContent = DB.metrics.orders;
+
+  if(sales) document.getElementById('socialProof').textContent = `Compra reciente: ${sales} item vendido hace segundos`;
+
+}
+
+setInterval(simulateActivity,3000);
+
+/* ---------- ON LOAD: detect ref param ---------- */
+
+(function init(){
+
+  // ensure DB shape
+
+  DB.users = DB.users || {};
+
+  DB.metrics = DB.metrics || {cash:0,clicks:0,orders:0};
+
+  saveDB();
+
+  // render
+
+  renderCatalog();
+
+  document.getElementById('countUsers').textContent = 'Usuarios: ' + Object.keys(DB.users).length;
+
+  // if ?ref=... then store for next register
+
+  const p = new URLSearchParams(location.search);
+
+  const ref = p.get('ref');
+
+  if(ref){ localStorage.setItem('ap_pending_ref', ref); toast('Has venido por referral: '+ref,1500); }
+
+  // set current user if logged
+
+  if(currentUser){ if(!DB.users[currentUser] && currentUser!==ADMIN_USER) { DB.users[currentUser] = {pass:'',credits:0,ref:0}; saveDB(); } updateRefLink(); }
+
+})();
+
+</script>
+
+</body>
+
+</html>
